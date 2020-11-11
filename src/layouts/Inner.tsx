@@ -34,6 +34,10 @@ import { RenderPage } from './RenderPage';
 import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
 import { RenderToolbarSlot } from './ToolbarSlot';
+import { useControllableValue } from '@umijs/hooks';
+import { AnnotationProvider } from '../contexts/AnnotationContext';
+import { Contents, PopoverEleType } from '../types';
+import { PdfJsAnnotation } from 'src/utils/annotationUtils';
 
 // `new RegExp('')` will treat the source as `(?:)` which is not an empty string
 const EMPTY_KEYWORD_REGEXP = new RegExp(' ');
@@ -54,11 +58,17 @@ interface InnerProps {
     onDocumentLoad(doc: PdfJs.PdfDocument): void;
     onOpenFile(fileName: string, data: Uint8Array): void;
     onZoom(doc: PdfJs.PdfDocument, scale: number): void;
+    onPageNumberChange?(page: number): void;
+    annotationValue?: PdfJs.Annotation[][];
+    onNewAnnotation?(newAnnotation: PdfJsAnnotation, contents: Contents, pageNumber: number, hideTipAndSelection: () => void ): void;
+    SelectionPopover?: PopoverEleType;
+    AnnotationPopover?: PopoverEleType;
 }
 
 const Inner: React.FC<InnerProps> = ({
     defaultScale, doc, file, initialPage, keyword, layout, pageSize, render, renderPage, selectionMode,
-    onDocumentLoad, onOpenFile, onZoom,
+    onDocumentLoad, onOpenFile, onZoom, annotationValue, onNewAnnotation ,onPageNumberChange,
+    SelectionPopover, AnnotationPopover
 }) => {
     const theme = React.useContext(ThemeContext);
     const pagesRef = React.useRef<HTMLDivElement | null>(null);
@@ -86,6 +96,15 @@ const Inner: React.FC<InnerProps> = ({
     const arr = Array(numPages).fill(null);
     const pageVisibility = arr.map(() => 0);
     const pageRefs = arr.map(() => React.useRef<HTMLDivElement>());
+
+    const handleNewAnnotation = React.useCallback(
+        (newAnnotation: PdfJsAnnotation, contents: Contents, hideTipAndSelection: () => void): void => {
+            if (onNewAnnotation) {
+                onNewAnnotation(newAnnotation, contents, currentPage, hideTipAndSelection)
+            }
+        },
+        [onNewAnnotation, currentPage],
+    )
 
     const openFiles = (files: FileList): void => {
         if (files.length === 0) {
@@ -322,9 +341,25 @@ const Inner: React.FC<InnerProps> = ({
                                     className={`${theme.prefixClass}-inner-page`}
                                     key={`pagelayer-${index}`}
                                     ref={(ref): void => {
-                                        pageRefs[index].current = ref as HTMLDivElement;
+                                    pageRefs[index].current = ref as HTMLDivElement
                                     }}
                                 >
+                                    <AnnotationProvider
+                                    value={annotationValue ? annotationValue[index] : []}
+                                    onNewAnnotation={(
+                                        newAnnotation,
+                                        contents,
+                                        hideTipAndSelection,
+                                    ): void =>
+                                        handleNewAnnotation(
+                                        newAnnotation,
+                                        contents,
+                                        hideTipAndSelection,
+                                        )
+                                    }
+                                    AnnotationPopover={AnnotationPopover}
+                                    SelectionPopover={SelectionPopover}
+                                    >
                                     <PageLayer
                                         doc={doc}
                                         keywordRegexp={keywordRegexp}
@@ -339,6 +374,7 @@ const Inner: React.FC<InnerProps> = ({
                                         onJumpToDest={jumpToDest}
                                         onPageVisibilityChanged={pageVisibilityChanged}
                                     />
+                                    </AnnotationProvider>
                                 </div>
                             );
                         })

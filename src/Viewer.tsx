@@ -26,6 +26,8 @@ import SelectionMode from './SelectionMode';
 import SpecialZoomLevel from './SpecialZoomLevel';
 import ThemeProvider from './theme/ThemeProvider';
 import PdfJs from './vendors/PdfJs';
+import { Contents, PopoverEleType } from './types';
+import { PdfJsAnnotation } from './utils/annotationUtils';
 
 interface RenderViewerProps {
     viewer: React.ReactElement;
@@ -61,6 +63,11 @@ interface ViewerProps {
     selectionMode?: SelectionMode;
     onDocumentLoad?(doc: PdfJs.PdfDocument): void;
     onZoom?(doc: PdfJs.PdfDocument, scale: number): void;
+    onPageNumberChange?(page: number): void;
+    annotationValue?: PdfJs.Annotation[][];
+    onNewAnnotation?(newAnnotation: PdfJsAnnotation, contents: Contents, pageNumber: number, hideTipAndSelection: () => void ): void;
+    SelectionPopover?: PopoverEleType;
+    AnnotationPopover?: PopoverEleType;
 }
 
 const Viewer: React.FC<ViewerProps> = ({
@@ -77,6 +84,11 @@ const Viewer: React.FC<ViewerProps> = ({
     selectionMode = SelectionMode.Text,
     onDocumentLoad = () => {/**/},
     onZoom = () => {/**/},
+    annotationValue,
+    onPageNumberChange,
+    onNewAnnotation = () => {/**/},
+    SelectionPopover,
+    AnnotationPopover
 }) => {
     const [file, setFile] = React.useState<File>({
         data: fileUrl,
@@ -124,6 +136,11 @@ const Viewer: React.FC<ViewerProps> = ({
                     onDocumentLoad={onDocumentLoad}
                     onOpenFile={openFile}
                     onZoom={onZoom}
+                    onPageNumberChange={onPageNumberChange}
+                    annotationValue={annotationValue}
+                    onNewAnnotation={onNewAnnotation}
+                    SelectionPopover={SelectionPopover}
+                    AnnotationPopover={AnnotationPopover}
                 />
             );
         };

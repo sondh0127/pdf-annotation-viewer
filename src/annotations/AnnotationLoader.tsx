@@ -7,6 +7,7 @@
  */
 
 import React from 'react';
+import { useAnnotationState } from '../contexts/AnnotationContext';
 
 import PdfJs from '../vendors/PdfJs';
 
@@ -18,13 +19,14 @@ interface AnnotationLayerProps {
 const AnnotationLoader: React.FC<AnnotationLayerProps> = ({ page, renderAnnotations }) => {
     const [loading, setLoading] = React.useState(true);
     const [annotations, setAnnotations] = React.useState<PdfJs.Annotation[]>([]);
+    const annotationValues = useAnnotationState();
 
     React.useEffect(() => {
         page.getAnnotations({ intent: 'display' }).then((result) => {
             setLoading(false);
-            setAnnotations(result);
+            setAnnotations(annotationValues);
         });
-    }, []);
+    }, [annotationValues]);
 
     return (
         loading

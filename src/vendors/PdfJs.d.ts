@@ -145,7 +145,19 @@ declare module 'pdfjs-dist' {
         x: number;
         y: number;
     }
+
+    interface Label {
+        id: any;
+        text: string;
+        hotkey: string;
+        color: string;
+        created_at: any;
+    }
+
     interface Annotation {
+        // Label
+        label?: Label;
+        annotationFlags: number;
         annotationType: number;
         color?: Uint8ClampedArray;
         dest: string;
@@ -165,10 +177,13 @@ declare module 'pdfjs-dist' {
         hasPopup?: boolean;
         contents?: string;
         modificationDate?: string;
+        creationDate?: string;
         title?: string;
         // Parent annotation
         parentId?: string;
         parentType?: string;
+        // Highlight annotation
+        quadPoints?: AnnotationPoint[][];
         // File attachment annotation
         file?: Attachment;
         // Ink annotation
@@ -222,6 +237,7 @@ declare module 'pdfjs-dist' {
         commonObjs: PageCommonObjects;
         objs: PageObjects;
         view: number[];
+        canvas: HTMLCanvasElement;
     }
 
     /* eslint-disable @typescript-eslint/no-empty-interface */
